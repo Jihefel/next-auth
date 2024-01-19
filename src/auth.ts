@@ -53,7 +53,7 @@ export const {
 
       return true;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
       }
@@ -63,10 +63,10 @@ export const {
       }
 
       if (session.user) {
-        session.user.is2FAEnabled = token.is2FAEnabled;
+        session.user.is2FAEnabled = token.is2FAEnabled as boolean;
         session.user.name = token.name;
         session.user.email = token.email;
-        session.user.isOAuth = token.isOAuth;
+        session.user.isOAuth = token.isOAuth as boolean;
       }
 
       return session;
