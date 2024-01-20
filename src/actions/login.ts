@@ -2,14 +2,15 @@
 
 import { signIn } from "@/auth";
 import { generate2FAToken, generateVerificationToken } from "@/lib/token";
-import { sendVerificationEmail } from "@/mails/verification";
 import { send2FATokenEmail } from "@/mails/two-factor-token";
+import { sendVerificationEmail } from "@/mails/verification";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { loginSchema } from "@/schemas";
 import { db } from "@/utils/prisma/client";
 import { get2FAConfirmationByUserId } from "@/utils/prisma/two-factor-confirmation";
 import { get2FATokenByEmail } from "@/utils/prisma/two-factor-token";
 import { getUserByEmail } from "@/utils/prisma/user";
+import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 
@@ -34,6 +35,14 @@ export const login = async (values: z.infer<typeof loginSchema>, callbackUrl?: s
   }
 
   if (existingUser.is2FAEnabled && existingUser.email) {
+     // Check password before proceeding with 2FA
+     const isPasswordValid = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+
+    if (!isPasswordValid) return { error: "Invalid credentials!" };
+    
     if (code) {
       const twoFactorToken = await get2FATokenByEmail(existingUser.email);
 
